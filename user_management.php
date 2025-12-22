@@ -32,7 +32,7 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 // --- Fetch total number of users for pagination ---
-$sql_count = "SELECT COUNT(*) FROM users WHERE role = 'user' AND banned = 0";
+$sql_count = "SELECT COUNT(*) FROM users WHERE role = 'user' AND banned = 0 AND reseller_id IS NULL";
 if ($search) {
     $sql_count .= " AND (username LIKE :search OR first_name LIKE :search OR last_name LIKE :search)";
 }
@@ -46,7 +46,7 @@ $total_pages = ceil($total_users / $limit);
 
 
 // Fetch users from the database (only regular users, not admin or banned)
-$sql = "SELECT id, username, first_name, last_name, contact_number, login_code, device_id, role, status, payment FROM users WHERE role = 'user' AND banned = 0";
+$sql = "SELECT id, username, first_name, last_name, contact_number, login_code, device_id, role, status, payment FROM users WHERE role = 'user' AND banned = 0 AND reseller_id IS NULL";
 if ($search) {
     $sql .= " AND (username LIKE :search OR first_name LIKE :search OR last_name LIKE :search)";
 }
