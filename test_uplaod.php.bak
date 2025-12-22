@@ -1,0 +1,70 @@
+<?php
+// test_upload.php
+session_start();
+require_once 'db_config.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    echo "<pre>";
+    print_r($_POST);
+    print_r($_FILES);
+    echo "</pre>";
+    
+    $target_dir = __DIR__ . '/updates/';
+    
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0755, true);
+    }
+    
+    if (isset($_FILES['app_apk'])) {
+        $filename = 'test_' . time() . '.apk';
+        $target_file = $target_dir . $filename;
+        
+        if (move_uploaded_file($_FILES['app_apk']['tmp_name'], $target_file)) {
+            echo "✅ File uploaded successfully to: " . $target_file . "<br>";
+            
+            // Try to insert into database
+            try {
+                $stmt = $pdo->prepare('INSERT INTO app_updates (version_code, version_name, apk_path, file_size) VALUES (?, ?, ?, ?)');
+                $stmt->execute([
+                    $_POST['version_code'],
+                    $_POST['version_name'],
+                    'updates/' . $filename,
+                    filesize($target_file)
+                ]);
+                echo "✅ Database insert successful! ID: " . $pdo->lastInsertId() . "<br>";
+            } catch (Exception $e) {
+                echo "❌ Database error: " . $e->getMessage() . "<br>";
+            }
+        } else {
+            echo "❌ File upload failed!<br>";
+            echo "Error: " . $_FILES['app_apk']['error'] . "<br>";
+        }
+    }
+    
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Upload</title>
+</head>
+<body>
+    <h2>Test APK Upload</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <div>
+            <label>Version Code:</label>
+            <input type="text" name="version_code" value="100">
+        </div>
+        <div>
+            <label>Version Name:</label>
+            <input type="text" name="version_name" value="1.0.0">
+        </div>
+        <div>
+            <label>APK File:</label>
+            <input type="file" name="app_apk">
+        </div>
+        <button type="submit">Test Upload</button>
+    </form>
+</body>
+</html>

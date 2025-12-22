@@ -1,0 +1,73 @@
+=== 2025-12-04 10:27:59 ===
+POST: Array
+(
+)
+
+FILES: Array
+(
+)
+
+Is app update? NO
+=== 2025-12-05 05:19:49 ===
+POST: Array
+(
+    [site_title] => CS-MOBILE DATA
+    [language] => zh
+)
+
+FILES: Array
+(
+    [site_icon] => Array
+        (
+            [name] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+Is app update? NO
+=== 2025-12-05 05:20:25 ===
+POST: Array
+(
+    [site_title] => CS-MOBILE DATA
+    [language] => fil
+)
+
+FILES: Array
+(
+    [site_icon] => Array
+        (
+            [name] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+Is app update? NO
+=== 2025-12-05 05:20:59 ===
+POST: Array
+(
+    [site_title] => CS-MOBILE DATA
+    [language] => en
+)
+
+FILES: Array
+(
+    [site_icon] => Array
+        (
+            [name] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+Is app update? NO
