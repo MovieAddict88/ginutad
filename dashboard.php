@@ -15,19 +15,19 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || $_SESSION
 require_once 'db_config.php';
 
 // Fetch data for the dashboard
-// Total Clients (only regular, non-banned users)
-$total_clients_stmt = $pdo->query('SELECT COUNT(*) FROM users WHERE role = "user" AND banned = 0');
+// Total Clients (only regular, non-banned users who are not reseller clients)
+$total_clients_stmt = $pdo->query('SELECT COUNT(*) FROM users WHERE role = "user" AND banned = 0 AND reseller_id IS NULL');
 $total_clients = $total_clients_stmt->fetchColumn();
 
-// Total Connected (only regular, non-banned users)
-$total_connected_stmt = $pdo->query('SELECT COUNT(DISTINCT user_id) FROM vpn_sessions JOIN users ON vpn_sessions.user_id = users.id WHERE vpn_sessions.end_time IS NULL AND users.role = \'user\' AND users.banned = 0');
+// Total Connected (only regular, non-banned users who are not reseller clients)
+$total_connected_stmt = $pdo->query('SELECT COUNT(DISTINCT user_id) FROM vpn_sessions JOIN users ON vpn_sessions.user_id = users.id WHERE vpn_sessions.end_time IS NULL AND users.role = \'user\' AND users.banned = 0 AND users.reseller_id IS NULL');
 $total_connected = $total_connected_stmt->fetchColumn();
 
 // Total Disconnected
 $total_disconnected = $total_clients - $total_connected;
 
-// Total Banned
-$total_banned_stmt = $pdo->query('SELECT COUNT(*) FROM users WHERE banned = 1 AND role = "user"');
+// Total Banned (only regular users who are not reseller clients)
+$total_banned_stmt = $pdo->query('SELECT COUNT(*) FROM users WHERE banned = 1 AND role = "user" AND reseller_id IS NULL');
 $total_banned = $total_banned_stmt->fetchColumn();
 
 // Data for charts
