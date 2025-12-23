@@ -33,7 +33,7 @@ $reseller = $stmt->fetch();
 $credit_balance = $reseller['credits'] ?? 0.00;
 
 // Fetch reseller's clients
-$stmt = $pdo->prepare("SELECT id, username, expiration_date FROM users WHERE reseller_id = :reseller_id");
+$stmt = $pdo->prepare("SELECT id, username, expiration_date, login_code, device_id FROM users WHERE reseller_id = :reseller_id");
 $stmt->execute(['reseller_id' => $reseller_id]);
 $clients = $stmt->fetchAll();
 
@@ -120,7 +120,7 @@ $sales = $stmt->fetchAll();
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">Client Management<a href="add_client.php" class="btn btn-success">Add New Client</a></div>
             <div class="card-body"><table class="table table-striped">
-                <thead><tr><th>Username</th><th>Status</th><th>Expiration Date</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Username</th><th>Status</th><th>Expiration Date</th><th>Login Code</th><th>Device ID</th><th>Actions</th></tr></thead>
                 <tbody>
                     <?php foreach ($clients as $client): ?>
                     <tr>
@@ -140,6 +140,8 @@ $sales = $stmt->fetchAll();
                             ?>
                         </td>
                         <td><?php echo $client['expiration_date'] ? date('Y-m-d', strtotime($client['expiration_date'])) : 'N/A'; ?></td>
+                        <td><?php echo htmlspecialchars($client['login_code']); ?></td>
+                        <td><?php echo htmlspecialchars($client['device_id']); ?></td>
                         <td>
                             <a href="edit_client.php?id=<?php echo $client['id']; ?>" class="btn btn-sm btn-primary">Edit</a>
                             <a href="delete_client.php?id=<?php echo $client['id']; ?>" class="btn btn-sm btn-danger">Delete</a>
