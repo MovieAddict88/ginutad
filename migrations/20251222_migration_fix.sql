@@ -17,18 +17,9 @@ ALTER TABLE `users`
   DROP COLUMN `data_usage`;
 
 -- 2. Modify the `vpn_profiles` table.
--- This table is missing columns for remote management (`management_ip`, `management_port`).
--- The `name` column is renamed to `profile_name` to match the column name expected in several PHP files.
--- The existing `promo_id` is dropped in favor of a many-to-many relationship via the `profile_promos` table.
-ALTER TABLE `vpn_profiles`
-  ADD COLUMN `management_ip` VARCHAR(255) DEFAULT NULL,
-  ADD COLUMN `management_port` INT(11) DEFAULT NULL,
-  CHANGE COLUMN `name` `profile_name` VARCHAR(255) NOT NULL,
-  DROP COLUMN `promo_id`;
-
--- 3. Create the `profile_promos` table.
--- This table is completely missing and is required for the many-to-many relationship
--- between VPN profiles and promos, as expected by `edit_profile.php`.
+-- 2. Create the `profile_promos` table (if it doesn't exist).
+-- This table is required for the new many-to-many relationship. It's created here so it's
+-- available for the data migration step that follows.
 CREATE TABLE IF NOT EXISTS `profile_promos` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `profile_id` INT(11) NOT NULL,
@@ -38,7 +29,23 @@ CREATE TABLE IF NOT EXISTS `profile_promos` (
   KEY `promo_id` (`promo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 4. Create the `zip_password` table.
+-- 3. Migrate existing promo relationships.
+-- This step copies the `promo_id` from `vpn_profiles` into the new `profile_promos`
+-- junction table, preserving the existing relationships before the old column is dropped.
+INSERT INTO `profile_promos` (profile_id, promo_id)
+SELECT id, promo_id FROM `vpn_profiles` WHERE promo_id IS NOT NULL;
+
+-- 4. Modify the `vpn_profiles` table.
+-- This table is missing columns for remote management (`management_ip`, `management_port`).
+-- The `name` column is renamed to `profile_name` to match the column name expected in several PHP files.
+-- The existing `promo_id` is dropped now that the data has been migrated.
+ALTER TABLE `vpn_profiles`
+  ADD COLUMN `management_ip` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `management_port` INT(11) DEFAULT NULL,
+  CHANGE COLUMN `name` `profile_name` VARCHAR(255) NOT NULL,
+  DROP COLUMN `promo_id`;
+
+-- 5. Create the `zip_password` table.
 -- This table is missing and is required by `get_password.php`.
 CREATE TABLE IF NOT EXISTS `zip_password` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,

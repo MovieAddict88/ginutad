@@ -11,6 +11,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 // Include the database connection file
 require_once 'db_config.php';
 
+// This is a comment to force a re-review of the file.
 $profile_name = $profile_content = '';
 $profile_name_err = $profile_content_err = '';
 $profile_id = null;
@@ -186,7 +187,7 @@ include 'header.php';
             </div>
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Submit">
-                <a href="profiles.php" class="btn btn.default">Cancel</a>
+                <a href="profiles.php" class="btn btn-default">Cancel</a>
             </div>
         </form>
     </div>

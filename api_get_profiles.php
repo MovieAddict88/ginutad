@@ -66,14 +66,32 @@ try {
         $stmt->execute();
         $profiles = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
-        // If no promo_id is provided, return an empty list of profiles.
-        $profiles = [];
+        // If no promo_id is provided, return all profiles that are not associated with any promo.
+        $sql = "
+            SELECT
+                p.id,
+                p.profile_name AS profile_name,
+                p.ovpn_config,
+                p.type as profile_type,
+                p.icon_path
+            FROM
+                vpn_profiles p
+            LEFT JOIN
+                profile_promos pp ON p.id = pp.profile_id
+            WHERE
+                pp.profile_id IS NULL
+            ORDER BY
+                p.profile_name ASC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+        $profiles = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     $base_url = get_base_url();
     foreach ($profiles as &$profile) {
         // Combine the base ovpn config with the promo's config text
-        $profile['profile_content'] = $profile['ovpn_config'] . "\n" . $profile['config_text'];
+        $profile['profile_content'] = $profile['ovpn_config'] . "\n" . ($profile['config_text'] ?? '');
 
         // Unset the original config fields to keep the response clean
         unset($profile['ovpn_config']);
