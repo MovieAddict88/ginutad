@@ -12,7 +12,13 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 require_once 'db_config.php';
 
 // Fetch all profiles from the database
-$stmt = $pdo->query('SELECT p.id, p.name, p.created_at, p.type, p.icon_path, pr.promo_name FROM vpn_profiles p LEFT JOIN promos pr ON p.promo_id = pr.id ORDER BY p.name');
+$stmt = $pdo->query('
+    SELECT p.id, p.name, p.created_at, p.type, p.icon_path, COUNT(pp.promo_id) as promo_count
+    FROM vpn_profiles p
+    LEFT JOIN profile_promos pp ON p.id = pp.profile_id
+    GROUP BY p.id
+    ORDER BY p.name
+');
 $profiles = $stmt->fetchAll();
 
 include 'header.php';
@@ -61,9 +67,10 @@ include 'header.php';
                         }
                         ?>
                         <span class="badge <?php echo $badge_class; ?>"><?php echo htmlspecialchars($profile['type']); ?></span>
-                        <?php if (!empty($profile['promo_name'])) : ?>
-                            <p class="profile-promo"><?php echo htmlspecialchars($profile['promo_name']); ?></p>
-                        <?php endif; ?>
+                        <p class="profile-promo">
+                            <?php echo htmlspecialchars($profile['promo_count']); ?>
+                            <?php echo translate('promos'); ?>
+                        </p>
                         <p class="profile-date"><?php echo date('M j, Y g:i A', strtotime($profile['created_at'])); ?></p>
                     </div>
                     <div class="profile-card-footer">

@@ -6,7 +6,7 @@ try {
     $stmt = $pdo->query("
         SELECT DISTINCT pr.id, pr.promo_name, pr.icon_promo_path
         FROM promos pr
-        JOIN vpn_profiles vp ON pr.id = vp.promo_id
+        JOIN profile_promos pp ON pr.id = pp.promo_id
         ORDER BY pr.promo_name ASC
     ");
     $promos = $stmt->fetchAll(PDO::FETCH_ASSOC);
