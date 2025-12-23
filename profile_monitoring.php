@@ -44,10 +44,10 @@ $icon_path = $profile['icon_path'];
 
 // Fetch total data usage and total users for the profile
 $sql_stats = 'SELECT 
-                COUNT(DISTINCT vs.user_id) AS total_users,
-                SUM(vs.bytes_in + vs.bytes_out) AS total_data_usage
-              FROM vpn_sessions vs
-              WHERE vs.profile_id = :profile_id';
+                COUNT(DISTINCT u.id) AS total_users,
+                SUM(u.bytes_in + u.bytes_out) AS total_data_usage
+              FROM users u
+              WHERE u.profile_id = :profile_id';
 $stmt_stats = $pdo->prepare($sql_stats);
 $stmt_stats->execute(['profile_id' => $profile_id]);
 $stats = $stmt_stats->fetch(PDO::FETCH_ASSOC);
@@ -58,11 +58,9 @@ $total_data_usage = $stats['total_data_usage'] ?? 0;
 // Fetch individual user data
 $sql_user_data = 'SELECT 
                     u.username,
-                    SUM(vs.bytes_in + vs.bytes_out) AS user_data_usage
-                  FROM vpn_sessions vs
-                  JOIN users u ON vs.user_id = u.id
-                  WHERE vs.profile_id = :profile_id
-                  GROUP BY u.username
+                    (u.bytes_in + u.bytes_out) AS user_data_usage
+                  FROM users u
+                  WHERE u.profile_id = :profile_id
                   ORDER BY user_data_usage DESC';
 $stmt_user_data = $pdo->prepare($sql_user_data);
 $stmt_user_data->execute(['profile_id' => $profile_id]);
