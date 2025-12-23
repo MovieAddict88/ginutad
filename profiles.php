@@ -12,7 +12,12 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 require_once 'db_config.php';
 
 // Fetch all profiles from the database
-$stmt = $pdo->query('SELECT p.id, p.name, p.created_at, p.type, p.icon_path, pr.promo_name FROM vpn_profiles p LEFT JOIN promos pr ON p.promo_id = pr.id ORDER BY p.name');
+$stmt = $pdo->query('SELECT p.id, p.profile_name AS name, p.created_at, p.type, p.icon_path, GROUP_CONCAT(pr.promo_name SEPARATOR ", ") AS promo_name
+                    FROM vpn_profiles p
+                    LEFT JOIN profile_promos pp ON p.id = pp.profile_id
+                    LEFT JOIN promos pr ON pp.promo_id = pr.id
+                    GROUP BY p.id
+                    ORDER BY p.profile_name');
 $profiles = $stmt->fetchAll();
 
 include 'header.php';

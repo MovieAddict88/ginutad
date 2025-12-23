@@ -23,10 +23,12 @@ if (!isset($_GET['profile_id']) || empty($_GET['profile_id'])) {
 $profile_id = $_GET['profile_id'];
 
 // Fetch profile details, including promo information and icon_path
-$sql_profile_details = 'SELECT p.name, p.type, p.icon_path, pr.promo_name
+$sql_profile_details = 'SELECT p.profile_name, p.type, p.icon_path, GROUP_CONCAT(pr.promo_name SEPARATOR ", ") as promo_name
                         FROM vpn_profiles p 
-                        LEFT JOIN promos pr ON p.promo_id = pr.id 
-                        WHERE p.id = :profile_id';
+                        LEFT JOIN profile_promos pp ON p.id = pp.profile_id
+                        LEFT JOIN promos pr ON pp.promo_id = pr.id
+                        WHERE p.id = :profile_id
+                        GROUP BY p.id';
 $stmt_profile_details = $pdo->prepare($sql_profile_details);
 $stmt_profile_details->execute(['profile_id' => $profile_id]);
 $profile = $stmt_profile_details->fetch(PDO::FETCH_ASSOC);
@@ -37,7 +39,7 @@ if (!$profile) {
     exit;
 }
 
-$profile_name = $profile['name'];
+$profile_name = $profile['profile_name'];
 $profile_type = $profile['type'];
 $promo_name = $profile['promo_name'];
 $icon_path = $profile['icon_path'];
@@ -45,8 +47,9 @@ $icon_path = $profile['icon_path'];
 // Fetch total data usage and total users for the profile
 $sql_stats = 'SELECT 
                 COUNT(DISTINCT u.id) AS total_users,
-                SUM(u.bytes_in + u.bytes_out) AS total_data_usage
+                SUM(vs.bytes_in + vs.bytes_out) AS total_data_usage
               FROM users u
+              JOIN vpn_sessions vs ON u.id = vs.user_id
               WHERE u.profile_id = :profile_id';
 $stmt_stats = $pdo->prepare($sql_stats);
 $stmt_stats->execute(['profile_id' => $profile_id]);
@@ -58,9 +61,11 @@ $total_data_usage = $stats['total_data_usage'] ?? 0;
 // Fetch individual user data
 $sql_user_data = 'SELECT 
                     u.username,
-                    (u.bytes_in + u.bytes_out) AS user_data_usage
+                    SUM(vs.bytes_in + vs.bytes_out) AS user_data_usage
                   FROM users u
+                  JOIN vpn_sessions vs ON u.id = vs.user_id
                   WHERE u.profile_id = :profile_id
+                  GROUP BY u.username
                   ORDER BY user_data_usage DESC';
 $stmt_user_data = $pdo->prepare($sql_user_data);
 $stmt_user_data->execute(['profile_id' => $profile_id]);

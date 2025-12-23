@@ -24,13 +24,13 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
 }
 
 // Fetch the profile from the database
-$stmt = $pdo->prepare('SELECT name, ovpn_config, type, icon_path, management_ip, management_port FROM vpn_profiles WHERE id = :id');
+$stmt = $pdo->prepare('SELECT profile_name, ovpn_config, type, icon_path, management_ip, management_port FROM vpn_profiles WHERE id = :id');
 $stmt->bindParam(':id', $profile_id, PDO::PARAM_INT);
 $stmt->execute();
 $profile = $stmt->fetch();
 
 if ($profile) {
-    $profile_name = $profile['name'];
+    $profile_name = $profile['profile_name'];
     $profile_content = $profile['ovpn_config'];
     $profile_type = $profile['type'];
     $profile_icon = $profile['icon_path'];
@@ -68,10 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $pdo->beginTransaction();
 
-            $sql = 'UPDATE vpn_profiles SET name = :name, ovpn_config = :profile_content, type = :profile_type, icon_path = :icon_path, management_ip = :management_ip, management_port = :management_port WHERE id = :id';
+            $sql = 'UPDATE vpn_profiles SET profile_name = :profile_name, ovpn_config = :profile_content, type = :profile_type, icon_path = :icon_path, management_ip = :management_ip, management_port = :management_port WHERE id = :id';
             $stmt = $pdo->prepare($sql);
 
-            $stmt->bindParam(':name', $profile_name, PDO::PARAM_STR);
+            $stmt->bindParam(':profile_name', $profile_name, PDO::PARAM_STR);
             $stmt->bindParam(':profile_content', $profile_content, PDO::PARAM_STR);
             $stmt->bindParam(':profile_type', $_POST['profile_type'], PDO::PARAM_STR);
             $stmt->bindParam(':icon_path', $_POST['icon_path'], PDO::PARAM_STR);
