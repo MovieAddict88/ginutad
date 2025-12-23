@@ -186,7 +186,7 @@ include 'header.php';
             </div>
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Submit">
-                <a href="profiles.php" class="btn btn-default">Cancel</a>
+                <a href="profiles.php" class="btn btn.default">Cancel</a>
             </div>
         </form>
     </div>

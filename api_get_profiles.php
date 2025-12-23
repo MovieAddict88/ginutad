@@ -45,19 +45,21 @@ try {
         $sql = "
             SELECT
                 p.id,
-                p.name AS profile_name,
+                p.profile_name AS profile_name,
                 p.ovpn_config,
                 pr.config_text,
                 p.type as profile_type,
                 p.icon_path
             FROM
                 vpn_profiles p
-            LEFT JOIN
-                promos pr ON p.promo_id = pr.id
+            JOIN
+                profile_promos pp ON p.id = pp.profile_id
+            JOIN
+                promos pr ON pp.promo_id = pr.id
             WHERE
-                p.promo_id = :promo_id
+                pp.promo_id = :promo_id
             ORDER BY
-                p.name ASC";
+                p.profile_name ASC";
 
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':promo_id', $promo_id, PDO::PARAM_INT);
