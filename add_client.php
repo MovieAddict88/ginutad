@@ -54,7 +54,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Create the new client
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, reseller_id, expiration_date, first_name, last_name, address, contact_number) VALUES (:username, :password, :reseller_id, :expiration_date, :first_name, :last_name, :address, :contact_number)");
+            require_once 'utils.php'; // Ensure login code generation function is available
+            $login_code = generate_unique_login_code($pdo);
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, reseller_id, expiration_date, first_name, last_name, address, contact_number, login_code) VALUES (:username, :password, :reseller_id, :expiration_date, :first_name, :last_name, :address, :contact_number, :login_code)");
             $stmt->execute([
                 'username' => $username,
                 'password' => $hashed_password,
@@ -63,7 +65,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'first_name' => 'Client',
                 'last_name' => 'User',
                 'address' => 'N/A',
-                'contact_number' => 'N/A'
+                'contact_number' => 'N/A',
+                'login_code' => $login_code
             ]);
             $client_id = $pdo->lastInsertId();
 
