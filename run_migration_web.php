@@ -1,37 +1,38 @@
 <?php
 require_once 'db_config.php';
 
-// Get all migration files
-$migration_files = glob('migrations/*.php');
+try {
+    // Create migrations table if it doesn't exist
+    $pdo->exec('CREATE TABLE IF NOT EXISTS migrations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        migration VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )');
 
-// Create migrations table if it doesn't exist
-$pdo->exec("CREATE TABLE IF NOT EXISTS migrations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    migration VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
+    // Check if the migration has already been run
+    $migration_name = '20251222_migration_fix.sql';
+    $stmt = $pdo->prepare('SELECT * FROM migrations WHERE migration = :migration');
+    $stmt->execute(['migration' => $migration_name]);
 
-// Get all migrations that have already been run
-$stmt = $pdo->query("SELECT migration FROM migrations");
-$run_migrations = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-foreach ($migration_files as $file) {
-    $migration_name = basename($file);
-
-    if (!in_array($migration_name, $run_migrations)) {
-        try {
-            // Run the migration
-            require_once $file;
-            echo "Migration successful: $migration_name<br>";
-
-            // Add the migration to the migrations table
-            $stmt = $pdo->prepare("INSERT INTO migrations (migration) VALUES (:migration)");
-            $stmt->execute(['migration' => $migration_name]);
-        } catch (Exception $e) {
-            die("Migration failed: " . $e->getMessage());
-        }
+    if ($stmt->rowCount() > 0) {
+        echo "Migration already completed.";
+        exit;
     }
-}
 
-echo "All migrations have been run.<br>";
+    // Read the SQL migration file
+    $sql = file_get_contents('migrations/20251222_migration_fix.sql');
+
+    // Execute the SQL script
+    $pdo->exec($sql);
+
+    // Log the migration
+    $stmt = $pdo->prepare('INSERT INTO migrations (migration) VALUES (:migration)');
+    $stmt->execute(['migration' => $migration_name]);
+
+    echo "Migration completed successfully.";
+
+} catch (PDOException $e) {
+    // Handle any errors
+    die("Migration failed: " . $e->getMessage());
+}
 ?>
