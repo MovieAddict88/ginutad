@@ -32,44 +32,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Check for errors before inserting into the database
     if (empty($profile_name_err) && empty($profile_content_err)) {
-        try {
-            $pdo->beginTransaction();
+        $sql = 'INSERT INTO vpn_profiles (name, ovpn_config, type, icon_path, promo_id) VALUES (:name, :ovpn_config, :type, :icon_path, :promo_id)';
 
-            // Insert into vpn_profiles
-            $sql_profile = 'INSERT INTO vpn_profiles (name, ovpn_config, type, icon_path) VALUES (:name, :ovpn_config, :type, :icon_path)';
-            $stmt_profile = $pdo->prepare($sql_profile);
+        if ($stmt = $pdo->prepare($sql)) {
+            $stmt->bindParam(':name', $profile_name, PDO::PARAM_STR);
+            $stmt->bindParam(':ovpn_config', $profile_content, PDO::PARAM_STR);
+            $stmt->bindParam(':type', $_POST['profile_type'], PDO::PARAM_STR);
+            $stmt->bindParam(':icon_path', $_POST['icon_path'], PDO::PARAM_STR);
+            $stmt->bindParam(':promo_id', $_POST['promo_id'], PDO::PARAM_INT);
 
-            $stmt_profile->bindParam(':name', $profile_name, PDO::PARAM_STR);
-            $stmt_profile->bindParam(':ovpn_config', $profile_content, PDO::PARAM_STR);
-            $stmt_profile->bindParam(':type', $_POST['profile_type'], PDO::PARAM_STR);
-            $stmt_profile->bindParam(':icon_path', $_POST['icon_path'], PDO::PARAM_STR);
-
-            if ($stmt_profile->execute()) {
-                $profile_id = $pdo->lastInsertId();
-
-                // Insert selected promos into the profile_promos table
-                if (!empty($_POST['promo_ids']) && is_array($_POST['promo_ids'])) {
-                    $sql_promo = 'INSERT INTO profile_promos (profile_id, promo_id) VALUES (:profile_id, :promo_id)';
-                    $stmt_promo = $pdo->prepare($sql_promo);
-
-                    foreach ($_POST['promo_ids'] as $promo_id) {
-                        $stmt_promo->bindParam(':profile_id', $profile_id, PDO::PARAM_INT);
-                        $stmt_promo->bindParam(':promo_id', $promo_id, PDO::PARAM_INT);
-                        $stmt_promo->execute();
-                    }
-                }
-
-                $pdo->commit();
+            if ($stmt->execute()) {
                 header('location: profiles.php');
                 exit;
             } else {
-                $pdo->rollBack();
-                echo 'Something went wrong with profile creation. Please try again later.';
+                echo 'Something went wrong. Please try again later.';
             }
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            error_log('Error in add_profile.php: ' . $e->getMessage());
-            echo 'An error occurred. Please try again later.';
         }
     }
 }
@@ -116,19 +93,17 @@ include 'header.php';
                 </select>
             </div>
             <div class="form-group">
-                <label>Promos</label>
-                <div class="checkbox-group">
+                <label>Promo</label>
+                <select name="promo_id" class="form-control">
+                    <option value="">Select Promo</option>
                     <?php
                     $sql = 'SELECT id, promo_name FROM promos';
                     $promos = $pdo->query($sql)->fetchAll();
                     foreach ($promos as $promo) {
-                        echo '<div class="form-check">';
-                        echo '<input class="form-check-input" type="checkbox" name="promo_ids[]" value="' . $promo['id'] . '" id="promo_' . $promo['id'] . '">';
-                        echo '<label class="form-check-label" for="promo_' . $promo['id'] . '">' . htmlspecialchars($promo['promo_name']) . '</label>';
-                        echo '</div>';
+                        echo "<option value='" . $promo['id'] . "'>" . htmlspecialchars($promo['promo_name']) . "</option>";
                     }
                     ?>
-                </div>
+                </select>
             </div>
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Submit">

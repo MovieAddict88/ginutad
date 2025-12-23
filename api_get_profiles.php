@@ -52,12 +52,10 @@ try {
                 p.icon_path
             FROM
                 vpn_profiles p
-            JOIN
-                profile_promos pp ON p.id = pp.profile_id
             LEFT JOIN
-                promos pr ON pp.promo_id = pr.id
+                promos pr ON p.promo_id = pr.id
             WHERE
-                pp.promo_id = :promo_id
+                p.promo_id = :promo_id
             ORDER BY
                 p.name ASC";
 

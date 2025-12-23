@@ -1,11 +1,6 @@
 <?php
 // 004_create_profile_promos_table.php
 
-// Check if the script is being run from the command line
-if (php_sapi_name() !== 'cli') {
-    die('This script can only be run from the command line.');
-}
-
 // Include the database configuration
 require_once 'db_config.php';
 
