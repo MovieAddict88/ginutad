@@ -32,16 +32,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Check for errors before inserting into the database
     if (empty($profile_name_err) && empty($profile_content_err)) {
-        $sql = 'INSERT INTO vpn_profiles (name, ovpn_config, type, icon_path, promo_id) VALUES (:name, :ovpn_config, :type, :icon_path, :promo_id)';
+        $sql = 'INSERT INTO vpn_profiles (profile_name, ovpn_config, type, icon_path) VALUES (:profile_name, :ovpn_config, :type, :icon_path)';
 
         if ($stmt = $pdo->prepare($sql)) {
-            $stmt->bindParam(':name', $profile_name, PDO::PARAM_STR);
+            $stmt->bindParam(':profile_name', $profile_name, PDO::PARAM_STR);
             $stmt->bindParam(':ovpn_config', $profile_content, PDO::PARAM_STR);
             $stmt->bindParam(':type', $_POST['profile_type'], PDO::PARAM_STR);
             $stmt->bindParam(':icon_path', $_POST['icon_path'], PDO::PARAM_STR);
-            $stmt->bindParam(':promo_id', $_POST['promo_id'], PDO::PARAM_INT);
 
             if ($stmt->execute()) {
+                $profile_id = $pdo->lastInsertId();
+                if (!empty($_POST['promo_ids']) && is_array($_POST['promo_ids'])) {
+                    $sql_insert_promo = 'INSERT INTO profile_promos (profile_id, promo_id) VALUES (:profile_id, :promo_id)';
+                    $stmt_insert_promo = $pdo->prepare($sql_insert_promo);
+
+                    foreach ($_POST['promo_ids'] as $promo_id) {
+                        $stmt_insert_promo->bindParam(':profile_id', $profile_id, PDO::PARAM_INT);
+                        $stmt_insert_promo->bindParam(':promo_id', $promo_id, PDO::PARAM_INT);
+                        $stmt_insert_promo->execute();
+                    }
+                }
                 header('location: profiles.php');
                 exit;
             } else {
@@ -93,17 +103,19 @@ include 'header.php';
                 </select>
             </div>
             <div class="form-group">
-                <label>Promo</label>
-                <select name="promo_id" class="form-control">
-                    <option value="">Select Promo</option>
+                <label>Promos</label>
+                <div class="checkbox-group">
                     <?php
-                    $sql = 'SELECT id, promo_name FROM promos';
-                    $promos = $pdo->query($sql)->fetchAll();
+                    $sql_promos = 'SELECT id, promo_name FROM promos';
+                    $promos = $pdo->query($sql_promos)->fetchAll();
                     foreach ($promos as $promo) {
-                        echo "<option value='" . $promo['id'] . "'>" . htmlspecialchars($promo['promo_name']) . "</option>";
+                        echo '<div class="form-check">';
+                        echo '<input class="form-check-input" type="checkbox" name="promo_ids[]" value="' . $promo['id'] . '" id="promo_' . $promo['id'] . '">';
+                        echo '<label class="form-check-label" for="promo_' . $promo['id'] . '">' . htmlspecialchars($promo['promo_name']) . '</label>';
+                        echo '</div>';
                     }
                     ?>
-                </select>
+                </div>
             </div>
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Submit">

@@ -30,12 +30,23 @@ if (isset($_FILES['profiles_ovpn']) && isset($_POST['profile_type'])) {
             $profile_name = pathinfo($file_name, PATHINFO_FILENAME);
             $ovpn_config = file_get_contents($file_tmp_name);
 
-            $sql = 'INSERT INTO vpn_profiles (name, ovpn_config, type) VALUES (:name, :ovpn_config, :type)';
+            $sql = 'INSERT INTO vpn_profiles (profile_name, ovpn_config, type) VALUES (:profile_name, :ovpn_config, :type)';
             if ($stmt = $pdo->prepare($sql)) {
-                $stmt->bindParam(':name', $profile_name, PDO::PARAM_STR);
+                $stmt->bindParam(':profile_name', $profile_name, PDO::PARAM_STR);
                 $stmt->bindParam(':ovpn_config', $ovpn_config, PDO::PARAM_STR);
                 $stmt->bindParam(':type', $profile_type, PDO::PARAM_STR);
                 if ($stmt->execute()) {
+                    $profile_id = $pdo->lastInsertId();
+                    if (!empty($_POST['promo_ids']) && is_array($_POST['promo_ids'])) {
+                        $sql_insert_promo = 'INSERT INTO profile_promos (profile_id, promo_id) VALUES (:profile_id, :promo_id)';
+                        $stmt_insert_promo = $pdo->prepare($sql_insert_promo);
+
+                        foreach ($_POST['promo_ids'] as $promo_id) {
+                            $stmt_insert_promo->bindParam(':profile_id', $profile_id, PDO::PARAM_INT);
+                            $stmt_insert_promo->bindParam(':promo_id', $promo_id, PDO::PARAM_INT);
+                            $stmt_insert_promo->execute();
+                        }
+                    }
                     $upload_count++;
                 }
             }
@@ -63,6 +74,21 @@ include 'header.php';
             <div class="form-group">
                 <label for="profile_name">Profile Name:</label>
                 <input type="text" name="profile_name" id="profile_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Promos</label>
+                <div class="checkbox-group">
+                    <?php
+                    $sql_promos = 'SELECT id, promo_name FROM promos';
+                    $promos = $pdo->query($sql_promos)->fetchAll();
+                    foreach ($promos as $promo) {
+                        echo '<div class="form-check">';
+                        echo '<input class="form-check-input" type="checkbox" name="promo_ids[]" value="' . $promo['id'] . '" id="promo_' . $promo['id'] . '">';
+                        echo '<label class="form-check-label" for="promo_' . $promo['id'] . '">' . htmlspecialchars($promo['promo_name']) . '</label>';
+                        echo '</div>';
+                    }
+                    ?>
+                </div>
             </div>
             <div class="form-group">
                 <label for="profile_ovpn">Select .ovpn file to upload:</label>
